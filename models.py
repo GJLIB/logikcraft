@@ -32,6 +32,7 @@ class Tree(Entity):
         )
 
 class Block(Entity):
+    current = 0
     def __init__(self, block_type, pos, **kwargs):
         super().__init__(
             parent = scene, 
@@ -60,16 +61,22 @@ class Map(Entity):
                 block = Block(4, (x, y, z))
 
                 random_num = random.randint(1, 100)
-                if rand_num == 71:
+                if random_num == 71:
                     Tree((x, y+1, z))
 
 
 class Player(FirstPersonController):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+        self.build_sound = Audio(sound_file_name = 'assets\audio\stone-effect-254998.mp3',
+        autoplay = False, volume = 0.5)
+        self.destroy_sound = Audio(sound_file_name = 'assets\audio\gravel.mp3',
+        autoplay = False, volume = 0.5)
+
         self.hand_block = Entity(parent = camera.ui, model = 'cube',
         texture = block_textures[Block.current], scale = 0.2, position=(0.6, -0.42),
-        shader=basic_lightning_shader, rotation = Vec3(30, -30, 10))
+        shader =  basic_lighting_shader, rotation = Vec3(30, -30, 10))
 
     def input(self, key):
         super().input(key)
@@ -89,10 +96,13 @@ class Player(FirstPersonController):
 
         if key == 'left mouse down' and mouse.hovered_entity:
             destroy(mouse.hovered_entity)
+            self.destroy_sound.play()
+
         if key == 'right mouse down' and mouse.hovered_entity:
             hit_info = raycast(camera.world_position, camera.forward, distance = 15)
             if hit_info.hit:
                 Block(1, hit_info.entity.position + hit_info.normal)
+                self.build_sound.play()
 
     def update(self):
         super().update()
